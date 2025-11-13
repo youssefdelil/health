@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لوحة المورد</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#16A34A',secondary:'#0284C7',danger:'#DC2626',background:'#F0FFF4'},fontFamily:{sans:['Cairo','Poppins','ui-sans-serif','system-ui']}}}};</script>
+  </head>
+  <body class="bg-background font-sans text-gray-900">
+    <div class="mx-auto max-w-6xl px-6 py-10">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">لوحة المورد</h1>
+      <a href="index.html" class="text-secondary hover:underline">الخروج</a>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-3">إضافة أدوية جديدة</h2>
+          <form id="addDrug" class="grid grid-cols-2 gap-2">
+            <input name="drug" placeholder="اسم الدواء" class="rounded border p-2" />
+            <input type="number" name="qty" placeholder="الكمية" class="rounded border p-2" />
+            <button class="col-span-2 rounded bg-primary text-white px-4 py-2">إضافة</button>
+          </form>
+          <div id="drugList" class="space-y-3 mt-3"></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-3">طلبات الصيدليات</h2>
+          <div id="pharmacyRequests" class="space-y-3 text-sm"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const catalog = JSON.parse(localStorage.getItem('supplierCatalog')||'[]');
+      function renderCatalog(){ document.getElementById('drugList').innerHTML = catalog.map(i=>`<div class="border rounded p-2 flex justify-between"><span>${i.drug}</span><span class="text-gray-600">${i.qty}</span></div>`).join(''); }
+      document.getElementById('addDrug').addEventListener('submit', (e)=>{ e.preventDefault(); const { drug, qty } = Object.fromEntries(new FormData(e.currentTarget)); if(!drug||!qty) return; const ex=catalog.find(i=>i.drug===drug); if(ex) ex.qty=Number(qty); else catalog.push({ drug, qty:Number(qty) }); localStorage.setItem('supplierCatalog', JSON.stringify(catalog)); e.currentTarget.reset(); renderCatalog(); });
+      renderCatalog();
+
+      const pReq = JSON.parse(localStorage.getItem('publicRequests')||'[]');
+      document.getElementById('pharmacyRequests').innerHTML = pReq.length ? pReq.map(r=>`<div class="border rounded p-2">${r.title}</div>`).join('') : '<p class="text-gray-600">لا توجد طلبات حالياً.</p>';
+    </script>
+  </body>
+  </html>

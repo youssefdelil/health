@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لوحة المدير — الشبكة الطبية الذكية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: { colors: { primary: '#16A34A', secondary: '#0284C7', danger: '#DC2626', background: '#F0FFF4' }, fontFamily: { sans: ['Cairo','Poppins','ui-sans-serif','system-ui'] } } } };
+    </script>
+  </head>
+  <body class="bg-background font-sans text-gray-900">
+    <div class="mx-auto max-w-5xl px-6 py-10">
+      <a href="index.html" class="text-secondary hover:underline">← العودة للصفحة الرئيسية</a>
+      <h1 class="text-3xl font-bold mt-4">لوحة المدير</h1>
+
+      <section id="loginSection" class="mt-6">
+        <div class="p-6 rounded-xl bg-white shadow max-w-md">
+          <h2 class="text-xl font-semibold mb-3">تسجيل دخول المدير</h2>
+          <form id="adminLogin" class="space-y-3">
+            <div>
+              <label class="block text-sm mb-1">اسم المستخدم</label>
+              <input name="username" class="w-full rounded-lg border p-2" required />
+            </div>
+            <div>
+              <label class="block text-sm mb-1">كلمة المرور</label>
+              <input type="password" name="password" class="w-full rounded-lg border p-2" required />
+            </div>
+            <button class="rounded-full bg-gradient-to-r from-primary to-secondary px-6 py-2 text-white font-semibold">دخول</button>
+            <p id="adminResult" class="text-sm mt-2"></p>
+          </form>
+        </div>
+      </section>
+
+      <section id="dashboardSection" class="mt-10 hidden">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-xl shadow">
+            <h3 class="text-lg font-semibold mb-3">طلبات تسجيل تنتظر الموافقة</h3>
+            <div id="pendingList" class="space-y-3"></div>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow">
+            <h3 class="text-lg font-semibold mb-3">جميع الحسابات</h3>
+            <div id="allUsers" class="space-y-3"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const getUsers = () => JSON.parse(localStorage.getItem('users') || '[]');
+      const setUsers = (u) => localStorage.setItem('users', JSON.stringify(u));
+
+      document.getElementById('adminLogin').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const { username, password } = Object.fromEntries(new FormData(e.currentTarget));
+        const res = document.getElementById('adminResult');
+        if (username === 'admin' && password === '123455678') {
+          res.textContent = 'تم تسجيل الدخول بنجاح';
+          res.className = 'text-primary';
+          document.getElementById('loginSection').classList.add('hidden');
+          document.getElementById('dashboardSection').classList.remove('hidden');
+          renderLists();
+        } else {
+          res.textContent = 'بيانات المدير غير صحيحة';
+          res.className = 'text-danger';
+        }
+      });
+
+      function renderLists() {
+        const users = getUsers();
+        const pending = users.filter(u => u.status === 'pending');
+        const pendingList = document.getElementById('pendingList');
+        const allUsers = document.getElementById('allUsers');
+        pendingList.innerHTML = pending.length ? '' : '<p class="text-sm text-gray-500">لا توجد طلبات معلّقة.</p>';
+        pending.forEach(u => {
+          const div = document.createElement('div');
+          div.className = 'border rounded-lg p-3 flex items-center justify-between';
+          div.innerHTML = `<div><div class="font-semibold">${u.fullName}</div><div class="text-sm text-gray-600">${u.role} — ${u.email}</div></div>
+              <div class="flex gap-2">
+                <button class="px-3 py-1 rounded bg-primary text-white" data-action="approve" data-id="${u.id}">قبول</button>
+                <button class="px-3 py-1 rounded bg-danger text-white" data-action="reject" data-id="${u.id}">رفض</button>
+              </div>`;
+          pendingList.appendChild(div);
+        });
+        allUsers.innerHTML = users.length ? '' : '<p class="text-sm text-gray-500">لا يوجد مستخدمون.</p>';
+        users.forEach(u => {
+          const div = document.createElement('div');
+          div.className = 'border rounded-lg p-3 flex items-center justify-between';
+          div.innerHTML = `<div><div class="font-semibold">${u.fullName}</div><div class="text-sm text-gray-600">${u.role} — ${u.email}</div><div class="text-xs">الحالة: ${u.status}</div></div>
+              <div class="flex gap-2">
+                <button class="px-3 py-1 rounded bg-secondary text-white" data-action="delete" data-id="${u.id}">حذف</button>
+              </div>`;
+          allUsers.appendChild(div);
+        });
+
+        document.querySelectorAll('#pendingList [data-action]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = Number(btn.getAttribute('data-id'));
+            const action = btn.getAttribute('data-action');
+            const users = getUsers();
+            const idx = users.findIndex(u => u.id === id);
+            if (idx >= 0) {
+              if (action === 'approve') users[idx].status = 'approved';
+              if (action === 'reject') users.splice(idx, 1);
+              setUsers(users);
+              renderLists();
+            }
+          });
+        });
+        document.querySelectorAll('#allUsers [data-action="delete"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = Number(btn.getAttribute('data-id'));
+            const users = getUsers().filter(u => u.id !== id);
+            setUsers(users);
+            renderLists();
+          });
+        });
+      }
+    </script>
+  </body>
+  </html>

@@ -1,0 +1,18 @@
+/* مشترك بين الصفحات لمنح لمسة متناسقة */
+:root {
+  --primary: #16A34A;
+  --secondary: #0284C7;
+  --danger: #DC2626;
+  --background: #F0FFF4;
+}
+.btn-grad {
+  background-image: linear-gradient(to right, var(--primary), var(--secondary));
+  color: #fff;
+  border-radius: 9999px;
+  padding: .75rem 1.25rem;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+  transition: filter .2s ease, transform .2s ease;
+}
+.btn-grad:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.card { box-shadow: 0 10px 16px rgba(0,0,0,.08); border-radius: .75rem; }

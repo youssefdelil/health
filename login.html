@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>تسجيل الدخول — الشبكة الطبية الذكية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: '#16A34A', secondary: '#0284C7', danger: '#DC2626', background: '#F0FFF4' },
+            fontFamily: { sans: ['Cairo', 'Poppins', 'ui-sans-serif', 'system-ui'] }
+          }
+        }
+      };
+    </script>
+    <style>
+      .glass { background: rgba(255,255,255,.35); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.35); }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-background to-white font-sans text-gray-900">
+    <div class="mx-auto max-w-md px-6 py-16">
+      <h1 class="text-3xl font-bold mb-6 text-center">تسجيل الدخول</h1>
+      <form id="loginForm" class="glass p-6 rounded-2xl shadow space-y-4">
+        <div>
+          <label class="block text-sm mb-1">البريد الإلكتروني أو رقم الهاتف</label>
+          <input name="identifier" class="w-full rounded-lg border p-3 bg-white/50" required />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">كلمة السر</label>
+          <input type="password" name="password" class="w-full rounded-lg border p-3 bg-white/50" required />
+        </div>
+        <div>
+          <label class="block text-sm mb-1">نوع الحساب</label>
+          <select name="role" class="w-full rounded-lg border p-3 bg-white/50" required>
+            <option value="patient">مريض</option>
+            <option value="doctor">طبيب</option>
+            <option value="pharmacist">صيدلي</option>
+            <option value="supplier">مورد</option>
+          </select>
+        </div>
+        <button class="w-full rounded-full bg-gradient-to-r from-primary to-secondary px-6 py-3 text-white font-semibold shadow hover:shadow-lg transition">دخول</button>
+        <p id="result" class="mt-3 text-sm text-center"></p>
+      </form>
+      <p class="text-center mt-4 text-sm"><a class="text-secondary hover:underline" href="register.html">إنشاء حساب جديد</a></p>
+    </div>
+
+    <script>
+      const users = () => JSON.parse(localStorage.getItem('users') || '[]');
+      const findUser = (identifier, password, role) => users().find(u => (u.email === identifier || u.phone === identifier) && u.password === password && u.role === role);
+
+      document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.currentTarget));
+        const user = findUser(data.identifier, data.password, data.role);
+        const result = document.getElementById('result');
+        if (!user) {
+          result.textContent = 'بيانات الدخول غير صحيحة';
+          result.className = 'text-danger text-center';
+          return;
+        }
+        if (user.status !== 'approved') {
+          result.textContent = 'حسابك ينتظر موافقة المدير';
+          result.className = 'text-secondary text-center';
+          return;
+        }
+        // route by role
+        const routes = {
+          patient: '/patient.html',
+          doctor: '/doctor.html',
+          pharmacist: '/pharmacist.html',
+          supplier: '/supplier.html',
+        };
+        window.location.href = routes[user.role] || '/index.html';
+      });
+    </script>
+  </body>
+  </html>

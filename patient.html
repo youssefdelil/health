@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لوحة المريض</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tQ7AxZJr3gZh+0Pj0LCQ=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGJQBVtUCnC2ZLW5nZ9gGJWSfQ=" crossorigin=""></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#16A34A',secondary:'#0284C7',danger:'#DC2626',background:'#F0FFF4'},fontFamily:{sans:['Cairo','Poppins','ui-sans-serif','system-ui']}}}};</script>
+    <style>#map{height:420px} .card{box-shadow:0 10px 16px rgba(0,0,0,.08)}</style>
+  </head>
+  <body class="bg-background font-sans text-gray-900">
+    <div class="mx-auto max-w-6xl px-6 py-10">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">لوحة المريض</h1>
+      <a href="index.html" class="text-secondary hover:underline">الخروج</a>
+      </div>
+      <div class="bg-white p-6 rounded-xl card mt-6">
+        <h2 class="text-xl font-semibold mb-3">ابحث عن دوائك</h2>
+        <form id="searchForm" class="flex gap-2">
+          <input name="drug" placeholder="اسم الدواء" class="flex-1 rounded border p-2" />
+          <button class="rounded bg-primary text-white px-4">بحث</button>
+        </form>
+        <p id="searchInfo" class="text-sm text-gray-600 mt-2"></p>
+      </div>
+      <div class="bg-white p-3 rounded-xl card mt-6">
+        <div id="map" class="rounded-lg overflow-hidden"></div>
+      </div>
+      <div class="bg-white p-6 rounded-xl card mt-6">
+        <h2 class="text-xl font-semibold mb-3">الصيدليات الأقرب</h2>
+        <div id="pharmList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <script>
+      const samplePharmacies = [
+        { name: 'صيدلية الشفاء', lat: 36.7525, lng: 3.04197, meds: ['Paracetamol','Ibuprofen','Vitamin C'], phone: '+213555111222' },
+        { name: 'صيدلية السلام', lat: 36.7580, lng: 3.05000, meds: ['Amoxicillin','Paracetamol'], phone: '+213555333444' },
+        { name: 'صيدلية الود', lat: 36.7601, lng: 3.06050, meds: ['Ibuprofen','Aspirin'], phone: '+213555666777' },
+      ];
+
+      let map, userMarker;
+      function initMap(lat=36.7525, lng=3.04197){
+        map = L.map('map').setView([lat, lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+        userMarker = L.marker([lat,lng]).addTo(map).bindPopup('موقعك التقريبي');
+        samplePharmacies.forEach(p=>{
+          const m = L.marker([p.lat, p.lng]).addTo(map);
+          m.bindPopup(`<b>${p.name}</b><br/>أدوية: ${p.meds.join('، ')}<br/><a target="_blank" href="https://wa.me/${p.phone.replace(/\D/g,'')}">واتساب</a>`);
+        });
+      }
+      function updateList(drug){
+        const list = document.getElementById('pharmList');
+        const filtered = drug ? samplePharmacies.filter(p=>p.meds.some(m=>m.toLowerCase().includes(drug.toLowerCase()))) : samplePharmacies;
+        list.innerHTML = filtered.map(p=>`<div class="border rounded p-3 flex justify-between items-center"><div><div class="font-semibold">${p.name}</div><div class="text-sm text-gray-600">${p.meds.join('، ')}</div></div><a target="_blank" class="text-secondary hover:underline" href="https://wa.me/${p.phone.replace(/\D/g,'')}">واتساب</a></div>`).join('');
+        document.getElementById('searchInfo').textContent = drug ? `نتائج تحتوي على: ${drug}` : 'جميع الصيدليات القريبة';
+      }
+      document.getElementById('searchForm').addEventListener('submit',(e)=>{e.preventDefault(); const { drug } = Object.fromEntries(new FormData(e.currentTarget)); updateList(drug);});
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos)=>{ initMap(pos.coords.latitude, pos.coords.longitude); updateList(''); }, ()=>{ initMap(); updateList(''); });
+      } else { initMap(); updateList(''); }
+    </script>
+  </body>
+  </html>

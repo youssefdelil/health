@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لوحة الصيدلي</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#16A34A',secondary:'#0284C7',danger:'#DC2626',background:'#F0FFF4'},fontFamily:{sans:['Cairo','Poppins','ui-sans-serif','system-ui']}}}};</script>
+  </head>
+  <body class="bg-background font-sans text-gray-900">
+    <div class="mx-auto max-w-6xl px-6 py-10">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">لوحة الصيدلي</h1>
+      <a href="index.html" class="text-secondary hover:underline">الخروج</a>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-3">المرضى المرتبطون</h2>
+          <form id="addPatient" class="flex gap-2">
+            <input name="name" placeholder="اسم المريض" class="flex-1 rounded border p-2" />
+            <button class="rounded bg-primary text-white px-4">إضافة</button>
+          </form>
+          <div id="patientList" class="space-y-3 mt-3"></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-3">المخزون</h2>
+          <form id="stockForm" class="grid grid-cols-2 gap-2">
+            <input name="drug" placeholder="اسم الدواء" class="rounded border p-2" />
+            <input type="number" name="qty" placeholder="الكمية" class="rounded border p-2" />
+            <button class="col-span-2 rounded bg-secondary text-white px-4 py-2">تحديث</button>
+          </form>
+          <div id="stockList" class="space-y-3 mt-3"></div>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-xl shadow mt-6">
+        <h2 class="text-xl font-semibold mb-3">الموردون المتاحون</h2>
+        <ul class="space-y-2 text-sm" id="suppliers"></ul>
+        <div class="mt-6">
+          <h3 class="text-lg font-semibold mb-2">الطلب العام</h3>
+          <form id="publicRequest" class="flex gap-2">
+            <input name="title" placeholder="عنوان الطلب" class="flex-1 rounded border p-2" />
+            <button class="rounded bg-primary text-white px-4">نشر</button>
+          </form>
+          <div id="requests" class="space-y-2 mt-3"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const suppliersData = [
+        { name: 'شركة الأمل للتوريد', phone: '+213555000111' },
+        { name: 'فارما برو', phone: '+213555222333' },
+        { name: 'دواء الخير', phone: '+213555444555' },
+      ];
+      const wa = (phone) => `https://wa.me/${phone.replace(/\D/g,'')}`;
+      document.getElementById('suppliers').innerHTML = suppliersData.map(s => `<li class="flex justify-between items-center"><span>${s.name}</span><a class="text-secondary hover:underline" target="_blank" href="${wa(s.phone)}">واتساب</a></li>`).join('');
+
+      const patients = [];
+      const stock = [];
+      document.getElementById('addPatient').addEventListener('submit', (e) => {
+        e.preventDefault(); const { name } = Object.fromEntries(new FormData(e.currentTarget)); if(!name) return;
+        patients.push({ name }); e.currentTarget.reset(); renderPatients();
+      });
+      function renderPatients(){ document.getElementById('patientList').innerHTML = patients.map(p=>`<div class="border rounded p-2">${p.name}</div>`).join(''); }
+
+      document.getElementById('stockForm').addEventListener('submit', (e) => {
+        e.preventDefault(); const { drug, qty } = Object.fromEntries(new FormData(e.currentTarget)); if(!drug||!qty) return;
+        const ex = stock.find(i=>i.drug===drug); if(ex) ex.qty = Number(qty); else stock.push({drug, qty:Number(qty)});
+        e.currentTarget.reset(); renderStock();
+      });
+      function renderStock(){ document.getElementById('stockList').innerHTML = stock.map(i=>`<div class="border rounded p-2 flex justify-between"><span>${i.drug}</span><span class="text-gray-600">${i.qty}</span></div>`).join(''); }
+
+      const requests = JSON.parse(localStorage.getItem('publicRequests')||'[]');
+      document.getElementById('publicRequest').addEventListener('submit', (e)=>{ e.preventDefault(); const { title } = Object.fromEntries(new FormData(e.currentTarget)); if(!title) return; const r={ id:Date.now(), title }; requests.unshift(r); localStorage.setItem('publicRequests', JSON.stringify(requests)); e.currentTarget.reset(); renderRequests(); });
+      function renderRequests(){ document.getElementById('requests').innerHTML = requests.map(r=>`<div class="border rounded p-2">${r.title}</div>`).join(''); }
+      renderRequests();
+    </script>
+  </body>
+  </html>

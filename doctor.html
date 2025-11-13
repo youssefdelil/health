@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لوحة الطبيب</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#16A34A',secondary:'#0284C7',danger:'#DC2626',background:'#F0FFF4'},fontFamily:{sans:['Cairo','Poppins','ui-sans-serif','system-ui']}}}};</script>
+  </head>
+  <body class="bg-background font-sans text-gray-900">
+    <div class="mx-auto max-w-6xl px-6 py-10">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">لوحة الطبيب</h1>
+      <a href="index.html" class="text-secondary hover:underline">الخروج</a>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-3">المرضى المرتبطون</h2>
+          <div id="patients" class="space-y-3 text-sm text-gray-700"></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-3">توفر الأدوية في الصيدليات</h2>
+          <div class="text-sm text-gray-700">قائمة تجريبية — للتكامل لاحقاً مع الموردين والصيدليات.</div>
+          <ul class="list-disc ms-5 mt-2 text-sm">
+            <li>Paracetamol 500mg — متوفر في 12 صيدلية</li>
+            <li>Amoxicillin 1g — متوفر في 7 صيدليات</li>
+            <li>Ibuprofen 400mg — متوفر في 9 صيدليات</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-xl shadow mt-6">
+        <h2 class="text-xl font-semibold mb-3">اقتراح بدائل (ذكاء اصطناعي تجريبي)</h2>
+        <div class="text-sm text-gray-700">أدخل دواء ناقص لاقتراح بدائل حسب المادة الفعالة:</div>
+        <form id="aiForm" class="mt-3 flex gap-2">
+          <input name="drug" placeholder="اسم الدواء" class="flex-1 rounded border p-2" />
+          <button class="rounded bg-primary text-white px-4">اقتراح</button>
+        </form>
+        <div id="aiResult" class="mt-3 text-sm"></div>
+      </div>
+    </div>
+    <script>
+      const samplePatients = [
+        { name: 'محمد أحمد', lastVisit: '2025-11-01' },
+        { name: 'سارة علي', lastVisit: '2025-10-23' },
+        { name: 'أمين بن يوسف', lastVisit: '2025-10-11' },
+      ];
+      document.getElementById('patients').innerHTML = samplePatients.map(p => `<div class="border rounded-lg p-3 flex justify-between"><span>${p.name}</span><span class="text-gray-500">آخر زيارة: ${p.lastVisit}</span></div>`).join('');
+      document.getElementById('aiForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const { drug } = Object.fromEntries(new FormData(e.currentTarget));
+        const mapping = {
+          'Paracetamol': ['Acetaminophen', 'Panadol'],
+          'Ibuprofen': ['Naproxen', 'Diclofenac'],
+          'Amoxicillin': ['Ampicillin', 'Augmentin'],
+        };
+        const base = Object.keys(mapping).find(k => drug && drug.toLowerCase().includes(k.toLowerCase()));
+        const result = base ? `بدائل مقترحة: ${mapping[base].join('، ')}` : 'لا توجد بيانات كافية — سيتم دعم نموذج أقوى لاحقاً.';
+        document.getElementById('aiResult').textContent = result;
+        document.getElementById('aiResult').className = 'text-secondary';
+      });
+    </script>
+  </body>
+  </html>

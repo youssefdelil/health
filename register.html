@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>التسجيل — الشبكة الطبية الذكية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#16A34A', secondary: '#0284C7', danger: '#DC2626', background: '#F0FFF4'
+            },
+            fontFamily: { sans: ['Cairo', 'Poppins', 'ui-sans-serif', 'system-ui'] }
+          }
+        }
+      };
+    </script>
+    <style>
+      .glass { background: rgba(255,255,255,.6); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.4); }
+    </style>
+  </head>
+  <body class="bg-background font-sans text-gray-900">
+    <div class="mx-auto max-w-3xl px-6 py-10">
+      <a href="index.html" class="text-secondary hover:underline">← العودة للصفحة الرئيسية</a>
+      <h1 class="text-3xl font-bold mt-4 mb-6">إنشاء حساب جديد</h1>
+      <form id="registerForm" class="glass p-6 rounded-xl shadow space-y-4">
+        <div>
+          <label class="block text-sm mb-1">نوع الحساب</label>
+          <select name="role" class="w-full rounded-lg border p-2" required>
+            <option value="patient">مريض</option>
+            <option value="doctor">طبيب</option>
+            <option value="pharmacist">صيدلي</option>
+            <option value="supplier">مورد (بائع جملة)</option>
+          </select>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm mb-1">الاسم الكامل</label>
+            <input name="fullName" class="w-full rounded-lg border p-2" required />
+          </div>
+          <div>
+            <label class="block text-sm mb-1">رقم الهاتف (للتحقق عبر واتساب)</label>
+            <input name="phone" class="w-full rounded-lg border p-2" required />
+          </div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm mb-1">البريد الإلكتروني</label>
+            <input type="email" name="email" class="w-full rounded-lg border p-2" required />
+          </div>
+          <div>
+            <label class="block text-sm mb-1">الولاية</label>
+            <input name="state" class="w-full rounded-lg border p-2" required />
+          </div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm mb-1">المدينة</label>
+            <input name="city" class="w-full rounded-lg border p-2" required />
+          </div>
+          <div class="grid sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-sm mb-1">كلمة السر</label>
+              <input type="password" name="password" class="w-full rounded-lg border p-2" required />
+            </div>
+            <div>
+              <label class="block text-sm mb-1">تأكيد كلمة السر</label>
+              <input type="password" name="confirmPassword" class="w-full rounded-lg border p-2" required />
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm mb-1">رفع بطاقة الهوية (إلزامي للطبيب/الصيدلي/المورد)</label>
+          <input type="file" name="idCard" class="w-full rounded-lg border p-2" accept="image/*,.pdf" />
+        </div>
+
+        <div class="text-sm text-gray-600">
+          <p>المريض → حساب فوري.</p>
+          <p>الطبيب، الصيدلي، المورد → ينتظر موافقة المدير.</p>
+        </div>
+
+        <button class="rounded-full bg-gradient-to-r from-primary to-secondary px-6 py-3 text-white font-semibold shadow hover:shadow-lg transition">إنشاء الحساب</button>
+        <p id="result" class="mt-3 text-sm"></p>
+      </form>
+    </div>
+
+    <script>
+      const saveUser = (user) => {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        users.push(user);
+        localStorage.setItem('users', JSON.stringify(users));
+      };
+
+      document.getElementById('registerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const data = Object.fromEntries(new FormData(form));
+        if (data.password !== data.confirmPassword) {
+          document.getElementById('result').textContent = 'كلمتا السر غير متطابقتين';
+          document.getElementById('result').className = 'text-danger';
+          return;
+        }
+        const role = data.role;
+        const needsId = role !== 'patient';
+        const hasId = form.idCard && form.idCard.files && form.idCard.files.length > 0;
+        if (needsId && !hasId) {
+          document.getElementById('result').textContent = 'رفع بطاقة الهوية إلزامي لهذا النوع.';
+          document.getElementById('result').className = 'text-danger';
+          return;
+        }
+        const status = role === 'patient' ? 'approved' : 'pending';
+        const user = {
+          id: Date.now(),
+          role,
+          fullName: data.fullName,
+          phone: data.phone,
+          email: data.email,
+          state: data.state,
+          city: data.city,
+          password: data.password,
+          status,
+        };
+        saveUser(user);
+        document.getElementById('result').textContent = status === 'approved' ? 'تم إنشاء حساب المريض فوراً.' : 'تم إرسال الطلب وينتظر الموافقة من المدير.';
+        document.getElementById('result').className = 'text-primary';
+        form.reset();
+      });
+    </script>
+  </body>
+  </html>

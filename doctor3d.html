@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>نموذج طبيب 3D</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js",
+          "three/examples/jsm/controls/OrbitControls.js": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/controls/OrbitControls.js",
+          "three/examples/jsm/loaders/GLTFLoader.js": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/loaders/GLTFLoader.js"
+        }
+      }
+    </script>
+    <style>
+      body { margin: 0; background: #0b1020; color: #eef1f5; font-family: system-ui, "Segoe UI", Tahoma, Arial, sans-serif; }
+      canvas { display: block; }
+      #hud { position: fixed; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 10; }
+      #hud .box { pointer-events: auto; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; backdrop-filter: blur(10px); padding: 10px 14px; }
+      a.btn { pointer-events: auto; text-decoration: none; color: #fff; background: linear-gradient(135deg,#2aa7ff,#007bff); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); }
+    </style>
+  </head>
+  <body>
+    <div id="hud">
+      <div class="box">استخدم الفأرة للدوران والتقريب</div>
+      <a class="btn" href="index.html">العودة للصفحة الرئيسية</a>
+    </div>
+
+    <script type="module">
+      import * as THREE from 'three';
+      import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+      import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x0b1020, 0.05);
+
+      const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+      camera.position.set(0, 1.6, 3);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 1.5, 0);
+      controls.enableDamping = true;
+
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x334466, 1.2);
+      scene.add(hemi);
+      const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+      dir.position.set(3, 5, 2);
+      dir.castShadow = true;
+      dir.shadow.mapSize.set(1024, 1024);
+      scene.add(dir);
+
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshStandardMaterial({ color: 0x0f162e, roughness: 0.9, metalness: 0 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = 0;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // تحميل نموذج GLB مجاني مع دعم CORS
+      const loader = new GLTFLoader();
+      loader.load(
+        'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+        (gltf) => {
+          const model = gltf.scene;
+          model.traverse((obj) => {
+            if (obj.isMesh) {
+              obj.castShadow = true;
+              obj.receiveShadow = true;
+            }
+          });
+          model.scale.set(1.2, 1.2, 1.2);
+          model.position.set(0, 0, 0);
+          scene.add(model);
+        },
+        undefined,
+        (error) => {
+          console.error('تعذر تحميل النموذج:', error);
+          const msg = document.createElement('div');
+          msg.className = 'box';
+          msg.style.position = 'fixed';
+          msg.style.bottom = '16px';
+          msg.style.left = '16px';
+          msg.textContent = 'تعذر تحميل نموذج ثلاثي الأبعاد. تحقق من الاتصال أو رابط النموذج.';
+          document.body.appendChild(msg);
+        }
+      );
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+  </html>
